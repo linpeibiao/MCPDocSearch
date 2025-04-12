@@ -1,0 +1,16 @@
+[project]
+name = "doc-crawler"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "crawl4ai>=0.5.0.post8",
+    "pathlib>=1.0.1",
+    "rich>=14.0.0",
+    "typer>=0.15.2",
+    "typing-extensions>=4.13.2",
+    "fastmcp>=2.0.0", # Updated to fastmcp v2
+    "sentence-transformers>=3.0.1",
+    "torch>=2.0.0", # sentence-transformers requires torch
+]

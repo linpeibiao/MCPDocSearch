@@ -1,0 +1,12 @@
+from crawl4ai import CacheMode
+
+# --- Default Configuration Values ---
+DEFAULT_INCLUDE_PATTERNS = ["*doc*", "*docs*", "*tutorial*", "*guide*", "*quickstart*", "*introduction*", "*getting started*", "*installation*", "*setup*"]
+DEFAULT_EXCLUDE_PATTERNS = ["*#*"]
+DEFAULT_CONTENT_TYPES = ["text/html"]
+DEFAULT_KEYWORDS = ["docs", "documentation", "doc", "guide", "tutorial", "example", "quickstart", "introduction", "getting started", "installation", "setup"]
+DEFAULT_KEYWORD_WEIGHT = 0.7
+DEFAULT_OUTPUT_TITLE = "# Crawled Documentation"
+DEFAULT_OUTPUT_FILENAME = "crawled_output.md"
+DEFAULT_MAX_DEPTH = 1
+DEFAULT_CACHE_MODE = CacheMode.BYPASS
