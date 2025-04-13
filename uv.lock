@@ -377,33 +377,6 @@ wheels = [
 ]
 
 [[package]]
-name = "doc-crawler"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "crawl4ai" },
-    { name = "fastmcp" },
-    { name = "pathlib" },
-    { name = "rich" },
-    { name = "sentence-transformers" },
-    { name = "torch" },
-    { name = "typer" },
-    { name = "typing-extensions" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "crawl4ai", specifier = ">=0.5.0.post8" },
-    { name = "fastmcp", specifier = ">=2.0.0" },
-    { name = "pathlib", specifier = ">=1.0.1" },
-    { name = "rich", specifier = ">=14.0.0" },
-    { name = "sentence-transformers", specifier = ">=3.0.1" },
-    { name = "torch", specifier = ">=2.0.0" },
-    { name = "typer", specifier = ">=0.15.2" },
-    { name = "typing-extensions", specifier = ">=4.13.2" },
-]
-
-[[package]]
 name = "dotenv"
 version = "0.9.9"
 source = { registry = "https://pypi.org/simple" }
@@ -950,6 +923,33 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/95/d2/f587cb965a56e992634bebc8611c5b579af912b74e04eb9164bd49527d21/mcp-1.6.0.tar.gz", hash = "sha256:d9324876de2c5637369f43161cd71eebfd803df5a95e46225cab8d280e366723", size = 200031 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/10/30/20a7f33b0b884a9d14dd3aa94ff1ac9da1479fe2ad66dd9e2736075d2506/mcp-1.6.0-py3-none-any.whl", hash = "sha256:7bd24c6ea042dbec44c754f100984d186620d8b841ec30f1b19eda9b93a634d0", size = 76077 },
+]
+
+[[package]]
+name = "mcpdocsearch"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "crawl4ai" },
+    { name = "fastmcp" },
+    { name = "pathlib" },
+    { name = "rich" },
+    { name = "sentence-transformers" },
+    { name = "torch" },
+    { name = "typer" },
+    { name = "typing-extensions" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "crawl4ai", specifier = ">=0.5.0.post8" },
+    { name = "fastmcp", specifier = ">=2.0.0" },
+    { name = "pathlib", specifier = ">=1.0.1" },
+    { name = "rich", specifier = ">=14.0.0" },
+    { name = "sentence-transformers", specifier = ">=3.0.1" },
+    { name = "torch", specifier = ">=2.0.0" },
+    { name = "typer", specifier = ">=0.15.2" },
+    { name = "typing-extensions", specifier = ">=4.13.2" },
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
 [project]
-name = "MCPDocSearch "
+name = "MCPDocSearch"
 version = "0.1.0"
 description = "Crawl websites and make documentation searchable via MCP for AI agents."
 readme = "README.md"
