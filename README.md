@@ -14,7 +14,10 @@ This project provides a toolset to crawl websites, generate Markdown documentati
   - Loads Markdown files from the `./storage/` directory.
   - Parses Markdown into semantic chunks based on headings.
   - Generates vector embeddings for each chunk using `sentence-transformers` (`multi-qa-mpnet-base-dot-v1`).
-  - Utilizes caching (`pickle`) for faster subsequent loads.
+  - **Caching:** Utilizes a cache file (`storage/document_chunks_cache.pkl`) to store processed chunks and embeddings.
+    - **First Run:** The initial server startup after crawling new documents may take some time as it needs to parse, chunk, and generate embeddings for all content.
+    - **Subsequent Runs:** If the cache file exists and the modification times of the source `.md` files in `./storage/` haven't changed, the server loads directly from the cache, resulting in much faster startup times.
+    - **Cache Invalidation:** The cache is automatically invalidated and regenerated if any `.md` file in `./storage/` is modified, added, or removed since the cache was last created.
   - Exposes MCP tools via `fastmcp` for clients like Cursor:
     - `list_documents`: Lists available crawled documents.
     - `get_document_headings`: Retrieves the heading structure for a document.
