@@ -176,6 +176,41 @@ def main(
             help="Extract only text content, ignoring markup, for markdown.",
         ),
     ] = True,
+    wait_for: Annotated[
+        Optional[str],
+        typer.Option(
+            "--wait-for",
+            help=(
+                "Time in seconds or CSS selector to wait for before capturing content. "
+                "For JavaScript-rendered pages, use a number (e.g., 5) or a CSS selector "
+                "(e.g., 'css:.content-loaded'). Prefix with 'js:' for JavaScript conditions."
+            ),
+        ),
+    ] = None,
+    js_code: Annotated[
+        Optional[str],
+        typer.Option(
+            "--js-code",
+            help=(
+                "JavaScript code to execute on the page before capturing content. "
+                "Useful for interacting with the page or making it render dynamic content."
+            ),
+        ),
+    ] = None,
+    page_load_timeout: Annotated[
+        int,
+        typer.Option(
+            "--page-load-timeout",
+            help="Maximum time in seconds to wait for page to load completely.",
+        ),
+    ] = 30,
+    wait_for_js_render: Annotated[
+        bool,
+        typer.Option(
+            "--wait-for-js-render/--no-wait-for-js-render",
+            help="Wait for JavaScript-rendered content using a special script for SPAs.",
+        ),
+    ] = False,
 ):
     """
     Crawls a website starting from the given URL and generates a merged
@@ -274,6 +309,10 @@ def main(
 
     # --- Configure Run ---
     # Pass the selected markdown strategy here
+    
+    # Determine the final wait_for value
+    final_wait_for = wait_for if wait_for else ("5" if wait_for_js_render else None)
+    
     merged_run_config = CrawlerRunConfig(
         deep_crawl_strategy=strategy,
         # Correct argument name is markdown_generator
@@ -283,7 +322,39 @@ def main(
         # cache_mode=cache_mode, # Set below
         exclude_external_links=exclude_markdown_external_links,
         only_text=only_text,
-        # Removed hardcoded exclude_selectors for broader applicability
+        # Add wait_for parameter using our determined value
+        wait_for=final_wait_for,
+        # Add js_code parameter if provided
+        js_code=js_code if js_code else (
+            # If wait_for_js_render is enabled and no custom js_code is provided, 
+            # use this SPA-friendly script to ensure content loads
+            """
+            // Scroll through the page to trigger lazy loading
+            function scrollToBottom() {
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+            
+            // Scroll a few times with delay to ensure content loads
+            scrollToBottom();
+            setTimeout(scrollToBottom, 1000);
+            setTimeout(scrollToBottom, 2000);
+            
+            // Try to find and click any "show more" or expand buttons
+            setTimeout(() => {
+                const buttons = Array.from(document.querySelectorAll('button, a, [role="button"]'))
+                    .filter(el => {
+                        const text = el.textContent.toLowerCase();
+                        return text.includes('show') || 
+                               text.includes('more') || 
+                               text.includes('expand') ||
+                               text.includes('load');
+                    });
+                buttons.forEach(button => button.click());
+            }, 3000);
+            """ if wait_for_js_render else None
+        ),
+        # Add page_timeout (milliseconds)
+        page_timeout=page_load_timeout * 1000,  # Convert to milliseconds
     )
 
     # --- Manually Parse Cache Mode ---

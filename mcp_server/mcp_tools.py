@@ -45,7 +45,7 @@ def get_document_headings(filename: str) -> List[Dict[str, Union[int, str]]]:
 
 @mcp_server.tool()  # Removed annotations argument
 def search_documentation(
-    query: str, filename: Optional[str] = None, max_results: int = 5
+    query: str, filename: Optional[str] = None, max_results: int = 10
 ) -> List[Dict[str, Union[str, float]]]:
     """
     MCP Tool: Searches documentation chunks based on a query.
