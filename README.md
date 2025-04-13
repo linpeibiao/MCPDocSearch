@@ -185,8 +185,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Contributions are welcome! Please feel free to open an issue or submit a pull request.
 
-_(Consider adding more detailed contribution guidelines in a separate CONTRIBUTING.md file, covering code style, testing requirements, and the pull request process.)_
-
 ## Security Notes
 
 - **Pickle Cache:** This project uses Python's `pickle` module to cache processed data (`storage/document_chunks_cache.pkl`). Unpickling data from untrusted sources can be insecure. Ensure that the `./storage/` directory is only writable by trusted users/processes.
