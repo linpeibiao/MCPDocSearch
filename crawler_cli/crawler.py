@@ -1,11 +1,11 @@
 import asyncio
-import os
 from pathlib import Path
 
 import typer
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, BrowserConfig
 
-from .utils import err_console # Import from utils
+from .utils import err_console  # Import from utils
+
 
 async def run_crawl(
     start_url: str,
@@ -37,15 +37,14 @@ async def run_crawl(
         if verbose:
             print(f"Starting crawl from: {start_url}")
             print(f"Output file: {output_file.resolve()}")
-            print(f"Max depth: {run_config.deep_crawl_strategy.max_depth if run_config.deep_crawl_strategy else 'N/A'}")
+            print(
+                f"Max depth: {run_config.deep_crawl_strategy.max_depth if run_config.deep_crawl_strategy else 'N/A'}"
+            )
             print(f"Cache mode: {run_config.cache_mode.name}")
             # Add more verbose output if needed
 
         try:
-            result_generator = await crawler.arun(
-                start_url,
-                config=run_config
-            )
+            result_generator = await crawler.arun(start_url, config=run_config)
 
             async for result in result_generator:
                 if result.success:
@@ -56,16 +55,18 @@ async def run_crawl(
                     with open(output_file, "a", encoding="utf-8") as f:
                         page_title = "Unknown Page"
                         if result.metadata and isinstance(result.metadata, dict):
-                             page_title = result.metadata.get('title', f"Page from {result.url}")
+                            page_title = result.metadata.get(
+                                "title", f"Page from {result.url}"
+                            )
                         elif isinstance(result.metadata, str):
-                             page_title = result.metadata
+                            page_title = result.metadata
 
                         f.write(f"\n## {page_title}\n\n")
                         f.write(f"Source: {result.url}\n\n")
 
                         md_content = ""
-                        if hasattr(result, 'markdown') and result.markdown:
-                            if hasattr(result.markdown, 'raw_markdown'):
+                        if hasattr(result, "markdown") and result.markdown:
+                            if hasattr(result.markdown, "raw_markdown"):
                                 md_content = result.markdown.raw_markdown
 
                         if md_content:
@@ -75,15 +76,20 @@ async def run_crawl(
                 else:
                     error_count += 1
                     # Print errors to stderr instead of the file
-                    err_console.print(f"[bold red]Error crawling {result.url}:[/bold red] {result.error_message}")
+                    err_console.print(
+                        f"[bold red]Error crawling {result.url}:[/bold red] {result.error_message}"
+                    )
 
-                del result # Optional memory management
+                del result  # Optional memory management
 
         except Exception as e:
             err_console.print(f"[bold red]Crawling/Processing error:[/bold red] {e}")
-            raise typer.Exit(code=1) # Exit with error code
+            raise typer.Exit(code=1)  # Exit with error code
 
     print(f"\nProcessed {processed_count} pages successfully.")
     if error_count > 0:
-        err_console.print(f"[yellow]Encountered errors on {error_count} pages.[/yellow]")
-    print(f"Consolidated markdown saved to {os.path.abspath(output_file)}")
+        err_console.print(
+            f"[yellow]Encountered errors on {error_count} pages.[/yellow]"
+        )
+    # Use Path.resolve() for absolute path
+    print(f"Consolidated markdown saved to {output_file.resolve()}")

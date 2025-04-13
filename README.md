@@ -37,7 +37,7 @@ This project uses [`uv`](https://github.com/astral-sh/uv) for dependency managem
 
     ```bash
     git clone <repository-url>
-    cd doc-crawler
+    cd MCPDocSearch
     ```
 
 3. **Install dependencies:**
@@ -83,6 +83,28 @@ Key options include:
 - `--remove-links`/`--keep-links`: Control HTML cleaning.
 - `--cache-mode`: Control `crawl4ai` caching (`DEFAULT`, `BYPASS`, `FORCE_REFRESH`).
 
+#### Refining Crawls with Patterns and Depth
+
+Sometimes, you might want to crawl only a specific subsection of a documentation site. This often requires some trial and error with `--include-pattern` and `--max-depth`.
+
+- **`--include-pattern`**: Restricts the crawler to only follow links whose URLs match the given pattern(s). Use wildcards (`*`) for flexibility.
+- **`--max-depth`**: Controls how many "clicks" away from the starting URL the crawler will go. A depth of 1 means it only crawls pages directly linked from the start URL. A depth of 2 means it crawls those pages *and* pages linked from them (if they also match include patterns), and so on.
+
+**Example: Crawling only the Pulsar Admin API section**
+
+Suppose you want only the content under `https://pulsar.apache.org/docs/4.0.x/admin-api-*`.
+
+1.  **Start URL:** You could start at the overview page: `https://pulsar.apache.org/docs/4.0.x/admin-api-overview/`.
+2.  **Include Pattern:** You only want links containing `admin-api`: `--include-pattern "*admin-api*"`.
+3.  **Max Depth:** You need to figure out how many levels deep the admin API links go from the starting page. Start with `2` and increase if needed.
+4.  **Verbose Mode:** Use `-v` to see which URLs are being visited or skipped, which helps debug the patterns and depth.
+
+```bash
+uv run python crawl.py https://pulsar.apache.org/docs/4.0.x/admin-api-overview/ -v --include-pattern "*admin-api*" --max-depth 2
+```
+
+Check the output file (`./storage/pulsar.apache.org.md` by default in this case). If pages are missing, try increasing `--max-depth` to `3`. If too many unrelated pages are included, make the `--include-pattern` more specific or add `--exclude-pattern` rules.
+
 ### 2. Running the MCP Server
 
 The MCP server is designed to be run by an MCP client like Cursor via the `stdio` transport. The command to run the server is:
@@ -91,11 +113,11 @@ The MCP server is designed to be run by an MCP client like Cursor via the `stdio
 python -m mcp_server.main
 ```
 
-However, it needs to be run from the project's root directory (`doc-crawler`) so that Python can find the `mcp_server` module.
+However, it needs to be run from the project's root directory (`MCPDocSearch`) so that Python can find the `mcp_server` module.
 
 ### 3. Configuring Cursor
 
-To use this server with Cursor, create a `.cursor/mcp.json` file in the root of this project (`doc-crawler/.cursor/mcp.json`) with the following content:
+To use this server with Cursor, create a `.cursor/mcp.json` file in the root of this project (`MCPDocSearch/.cursor/mcp.json`) with the following content:
 
 ```json
 {
@@ -105,7 +127,7 @@ To use this server with Cursor, create a `.cursor/mcp.json` file in the root of 
       "args": [
         "--directory",
         // IMPORTANT: Replace with the ABSOLUTE path to this project directory on your machine
-        "/path/to/your/doc-crawler",
+        "/path/to/your/MCPDocSearch",
         "run",
         "python",
         "-m",
@@ -122,7 +144,7 @@ To use this server with Cursor, create a `.cursor/mcp.json` file in the root of 
 - `"doc-query-server"`: A name for the server within Cursor.
 - `"command": "uv"`: Specifies `uv` as the command runner.
 - `"args"`:
-  - `"--directory", "/path/to/your/doc-crawler"`: **Crucially**, tells `uv` to change its working directory to your project root before running the command. **Replace `/path/to/your/doc-crawler` with the actual absolute path on your system.**
+  - `"--directory", "/path/to/your/MCPDocSearch"`: **Crucially**, tells `uv` to change its working directory to your project root before running the command. **Replace `/path/to/your/MCPDocSearch` with the actual absolute path on your system.**
   - `"run", "python", "-m", "mcp_server.main"`: The command `uv` will execute within the correct directory and virtual environment.
 
 After saving this file and restarting Cursor, the "doc-query-server" should become available in Cursor's MCP settings and usable by the Agent (e.g., `@doc-query-server search documentation for "how to install"`).
@@ -139,3 +161,32 @@ Key libraries used:
 - `uv`: Project and environment management.
 - `beautifulsoup4` (via `crawl4ai`): HTML parsing.
 - `rich`: Enhanced terminal output.
+
+## Architecture
+
+The project follows this basic flow:
+
+1.  **`crawler_cli`**: You run this tool, providing a starting URL and options.
+2.  **Crawling (`crawl4ai`)**: The tool uses `crawl4ai` to fetch web pages, following links based on configured rules (depth, patterns).
+3.  **Cleaning (`crawler_cli/markdown.py`)**: Optionally, HTML content is cleaned (removing navigation, links) using BeautifulSoup.
+4.  **Markdown Generation (`crawl4ai`)**: Cleaned HTML is converted to Markdown.
+5.  **Storage (`./storage/`)**: The generated Markdown content is saved to a file in the `./storage/` directory.
+6.  **`mcp_server` Startup**: When the MCP server starts (usually via Cursor's config), it runs `mcp_server/data_loader.py`.
+7.  **Loading & Caching**: The data loader checks for a cache file (`.pkl`). If valid, it loads chunks and embeddings from the cache. Otherwise, it reads `.md` files from `./storage/`.
+8.  **Chunking & Embedding**: Markdown files are parsed into chunks based on headings. Embeddings are generated for each chunk using `sentence-transformers` and stored in memory (and saved to cache).
+9.  **MCP Tools (`mcp_server/mcp_tools.py`)**: The server exposes tools (`list_documents`, `search_documentation`, etc.) via `fastmcp`.
+10. **Querying (Cursor)**: An MCP client like Cursor can call these tools. `search_documentation` uses the pre-computed embeddings to find relevant chunks based on semantic similarity to the query.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to open an issue or submit a pull request.
+
+*(Consider adding more detailed contribution guidelines in a separate CONTRIBUTING.md file, covering code style, testing requirements, and the pull request process.)*
+
+## Security Notes
+
+- **Pickle Cache:** This project uses Python's `pickle` module to cache processed data (`storage/document_chunks_cache.pkl`). Unpickling data from untrusted sources can be insecure. Ensure that the `./storage/` directory is only writable by trusted users/processes.

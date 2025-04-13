@@ -3,11 +3,9 @@ import pickle  # For caching
 import os  # For stat
 import sys  # Ensure sys is imported for stderr usage throughout
 
-# pathlib.Path was unused
-from typing import List, Dict, Optional, Union, Tuple, Any
+from typing import List, Dict, Union, Any  # Added Any
 
-import numpy as np  # Add numpy for embeddings
-# SentenceTransformer was unused here, it's used in app.py
+import numpy as np  # For np.ndarray type hint
 
 # Import config variables and the embedding model
 from mcp_server.config import STORAGE_DIR, CACHE_FILE_PATH
@@ -19,7 +17,7 @@ HEADING_RE = re.compile(r"^(#{2,6})\s+(.*)")
 SOURCE_RE = re.compile(r"Source:\s*(https?://\S+)")
 
 # In-memory storage for chunks - now includes embeddings
-# Using Union for embedding type hint as it's a numpy array
+# In-memory storage for chunks, including embeddings
 document_chunks: List[Dict[str, Union[str, np.ndarray]]] = []
 
 
@@ -35,8 +33,9 @@ def parse_markdown_to_chunks(filename: str, content: str) -> List[Dict[str, str]
     # Default for content before the first heading
     current_heading = "Introduction"
     current_content: List[str] = []
-    current_source_url: Optional[str] = None
-    heading_level = 1  # Track heading level for structure
+    # Use Union explicitly if Optional was removed from imports
+    current_source_url: Union[str, None] = None
+    heading_level = 1  # Default heading level
 
     for i, line in enumerate(lines):
         heading_match = HEADING_RE.match(line)
@@ -55,19 +54,16 @@ def parse_markdown_to_chunks(filename: str, content: str) -> List[Dict[str, str]
                             "content_lower": content_str.lower(),
                             "heading_lower": current_heading.lower(),
                             "source_url": current_source_url or "",
-                            "level": str(
-                                heading_level
-                            ),  # Store level as string for consistency
+                            "level": str(heading_level),
                         }
                     )
 
             # Start a new chunk
-            # Number of '#' indicates level
+            # '#' count indicates level
             heading_level = len(heading_match.group(1))
             current_heading = heading_match.group(2).strip()
             current_content = []
-            # Reset source URL for the new section
-            current_source_url = None
+            current_source_url = None  # Reset source URL for the new section
 
             # Check the *next* line for a potential Source: URL
             if i + 1 < len(lines):
@@ -134,7 +130,6 @@ def load_and_chunk_documents():
     # --- Try loading from cache and validate metadata ---
     cache_valid = False
     if current_file_metadata is not None and CACHE_FILE_PATH.exists():
-        # print(f"Attempting to load from cache: {CACHE_FILE_PATH}")
         try:
             with open(CACHE_FILE_PATH, "rb") as f_cache:
                 # Expecting a tuple: (metadata_dict, chunks_list)
@@ -147,7 +142,6 @@ def load_and_chunk_documents():
                     if cached_metadata == current_file_metadata:
                         document_chunks = cached_chunks
                         cache_valid = True
-                        # print(f"Loaded {len(document_chunks)} chunks from cache.") # noqa: E501
                     else:
                         print(
                             "Cache metadata mismatch. Source files changed. "
@@ -169,10 +163,7 @@ def load_and_chunk_documents():
 
         # --- Delete invalid/outdated cache file ---
         if not cache_valid and CACHE_FILE_PATH.exists():
-            print(
-                "Attempting to delete invalid/outdated cache file...",
-                file=sys.stderr,
-            )
+            # Attempting to delete invalid/outdated cache file...
             try:
                 CACHE_FILE_PATH.unlink(missing_ok=True)
             except OSError as unlink_e:
@@ -186,9 +177,8 @@ def load_and_chunk_documents():
         print(
             "Processing documents and generating embeddings...",
             file=sys.stderr,
-        )  # Log to stderr
+        )
         if not STORAGE_DIR.exists() or not STORAGE_DIR.is_dir():
-            # Use stderr for errors
             print(
                 f"Error: Storage directory '{STORAGE_DIR}' not found or is "
                 "not a directory.",
@@ -198,10 +188,8 @@ def load_and_chunk_documents():
             return
 
         loaded_chunks = []
-        # print(f"Scanning {STORAGE_DIR.resolve()} for .md files...")
         for file_path in STORAGE_DIR.glob("*.md"):
             try:
-                # print(f"Processing file: {file_path.name}")
                 content = file_path.read_text(encoding="utf-8")
                 file_chunks = parse_markdown_to_chunks(file_path.name, content)
                 loaded_chunks.extend(file_chunks)
@@ -215,35 +203,26 @@ def load_and_chunk_documents():
         # --- Generate Embeddings ---
         if loaded_chunks:
             # Prepare texts for embedding (e.g., combine heading and content)
-            # Using just content for now.
+            # Using just content for now. Consider heading+content?
             texts_to_embed = [chunk["content"] for chunk in loaded_chunks]
-            # print(f"Generating embeddings for {len(texts_to_embed)} chunks...") # noqa: E501
             try:
                 # Encode all texts at once for efficiency
-                # show_progress_bar=True might print to stdout/stderr
+                # Set show_progress_bar=True for CLI progress feedback
                 embeddings = embedding_model.encode(
                     texts_to_embed, show_progress_bar=False
                 )
-                # print("Embeddings generated.")
                 # Add embeddings back to the chunk dictionaries
                 for i, chunk in enumerate(loaded_chunks):
-                    # Store the numpy array
                     chunk["embedding"] = embeddings[i]
             except Exception as e:
-                # Use stderr for errors (sys is already imported globally)
                 print(f"Error generating embeddings: {e}", file=sys.stderr)
                 # Handle error: proceed without embeddings if encoding fails.
-                # Add None and handle it in search.
                 for chunk in loaded_chunks:
                     # Indicate embedding failed/missing
                     chunk["embedding"] = None
 
         # Update the global list *after* potential embedding
         document_chunks = loaded_chunks
-        # print(
-        #     f"Loaded {len(document_chunks)} chunks from "
-        #     f"{len(list(STORAGE_DIR.glob('*.md')))} files."
-        # )
 
         # --- Save the processed data and metadata to cache ---
         # Only save if processing was successful and we have metadata
@@ -257,13 +236,13 @@ def load_and_chunk_documents():
                 # Ensure parent directory exists
                 CACHE_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
                 # Data to cache: tuple of (metadata, chunks)
-                data_to_cache: Tuple[Dict[str, float], List[Dict[str, Any]]] = (
+                # Using Any for chunk dict value type (mixed str, np.ndarray)
+                data_to_cache: tuple[Dict[str, float], List[Dict[str, Any]]] = (
                     current_file_metadata,
                     document_chunks,
                 )
                 with open(CACHE_FILE_PATH, "wb") as f_cache:
                     pickle.dump(data_to_cache, f_cache)
-                # print("Cache saved successfully.")
             except Exception as e:
                 print(
                     f"Warning: Failed to save cache to {CACHE_FILE_PATH}: {e}",
@@ -308,6 +287,6 @@ def get_document_headings(filename: str) -> List[Dict[str, Union[int, str]]]:
     return headings
 
 
-# Expose the chunks for the search module - update type hint
+# Expose the chunks for the search module
 def get_all_chunks() -> List[Dict[str, Union[str, np.ndarray]]]:
     return document_chunks

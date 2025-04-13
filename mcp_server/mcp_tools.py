@@ -3,6 +3,7 @@ from typing import List, Dict, Optional, Union
 
 # Import the shared mcp_server instance using absolute path
 from mcp_server.app import mcp_server
+
 # Rename imported function to avoid recursion
 from mcp_server.data_loader import (
     get_available_documents,
@@ -31,7 +32,7 @@ def get_document_headings(filename: str) -> List[Dict[str, Union[int, str]]]:
     if filename not in available_docs:
         # Return empty list or could raise an error formatted for MCP result
         # For simplicity, returning empty list if file not found.
-        # Print warnings to stderr to avoid breaking MCP JSON communication on stdout # noqa: E501
+        # Print warnings to stderr to avoid breaking MCP JSON communication
         print(
             f"Warning: get_document_headings called for non-existent file: "
             f"{filename}",
@@ -67,8 +68,8 @@ def search_documentation(
     search_results = search_chunks(query, filename, max_results)
 
     # Format for MCP output (ensure structure matches expected output)
-    # In this case, the search_chunks function already returns the desired format. # noqa: E501
-    # We might add truncation here if content is too long.
+    # The search_chunks function already returns the desired format.
+    # Truncate content here for brevity in the final results.
     formatted_results = []
     for res in search_results:
         # Truncate content for brevity in results?
@@ -81,21 +82,15 @@ def search_documentation(
             {
                 "filename": res["filename"],
                 "heading": res["heading"],
-                # Use snippet or full content? Snippet is safer.
-                "content": content_snippet,  # noqa: E501
-                # Ensure score is float (already is from cos_sim)
-                "score": float(res["score"]),  # noqa: E501
+                "content": content_snippet,
+                "score": float(res["score"]),  # Ensure score is float
                 "source_url": res.get("source_url", ""),
             }
         )
 
     return formatted_results
 
+
 # No need for register_tools function anymore, decorators handle it.
 # The manual __signature__ assignments are also removed as the decorator
 # should infer the schema from type hints and docstrings.
-
-# print(  # Removed print
-#     "MCP Tools (list_documents, get_document_headings, "
-#     "search_documentation) registered via decorators."  # noqa: E501
-# )

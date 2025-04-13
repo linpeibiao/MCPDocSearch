@@ -13,12 +13,15 @@ from crawl4ai.deep_crawling.filters import (
     URLPatternFilter,
 )
 from crawl4ai.deep_crawling.scorers import KeywordRelevanceScorer
+
 # Import DefaultMarkdownGenerator AND our custom one
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 from typing_extensions import Annotated
 
 # Import from our modules
-from .markdown import LinkRemovingMarkdownGenerator  # Import the custom generator # noqa: E501
+from .markdown import (
+    LinkRemovingMarkdownGenerator,
+)  # Import the custom generator # noqa: E501
 from .config import (
     DEFAULT_CACHE_MODE,
     DEFAULT_CONTENT_TYPES,
@@ -31,20 +34,20 @@ from .config import (
     DEFAULT_OUTPUT_TITLE,
 )
 from .crawler import run_crawl
-# from .markdown import LinkRemovingMarkdownGenerator # Duplicate import removed # noqa: E501
 from .utils import err_console
 
 
 # --- Typer Application ---
 app = typer.Typer(
     help="A CLI tool to crawl websites and generate Markdown documentation.",
-    add_completion=False,  # Optional: disable Typer's own completion commands if not needed # noqa: E501
+    # Optional: disable Typer's own completion commands if not needed
+    add_completion=False,
 )
 
 
 @app.command()
 def main(
-    url: Annotated[str, typer.Argument(help="The starting URL for the crawl.")],  # noqa: E501
+    url: Annotated[str, typer.Argument(help="The starting URL for the crawl.")],
     output_file: Annotated[
         Optional[Path],  # Allow None
         typer.Option(
@@ -57,7 +60,8 @@ def main(
         ),
     ] = None,  # Default to None to detect if user provided it
     output_title: Annotated[
-        str, typer.Option("--title", help="Title for the output Markdown file.")  # noqa: E501
+        str,
+        typer.Option("--title", help="Title for the output Markdown file."),
     ] = DEFAULT_OUTPUT_TITLE,
     max_depth: Annotated[
         int,
@@ -68,7 +72,7 @@ def main(
             min=1,
             max=5,
             # Typer will now error if value is outside the min/max range
-        )
+        ),
     ] = DEFAULT_MAX_DEPTH,
     include_external: Annotated[
         bool,
@@ -120,9 +124,7 @@ def main(
     ] = None,  # Default to None, handle logic below
     keyword_weight: Annotated[
         float,
-        typer.Option(
-            "--keyword-weight", help="Weight for keyword relevance scorer."
-        ),
+        typer.Option("--keyword-weight", help="Weight for keyword relevance scorer."),
     ] = DEFAULT_KEYWORD_WEIGHT,
     remove_links_flag: Annotated[
         bool,
@@ -130,7 +132,7 @@ def main(
             "--remove-links/--keep-links",
             help=(
                 "Remove nav links, headers, footers from HTML before "
-                "markdown conversion."  # noqa: E501
+                "markdown conversion."
             ),
         ),
     ] = True,
@@ -143,15 +145,11 @@ def main(
     ] = True,
     verbose: Annotated[
         bool,
-        typer.Option(
-            "--verbose", "-v", help="Enable verbose output during crawl."
-        ),
+        typer.Option("--verbose", "-v", help="Enable verbose output during crawl."),
     ] = False,
     stream: Annotated[
         bool,
-        typer.Option(
-            "--stream/--no-stream", help="Process results as they arrive."
-        ),
+        typer.Option("--stream/--no-stream", help="Process results as they arrive."),
     ] = True,
     # Accept cache_mode as string, parse manually later
     cache_mode_str: Annotated[
@@ -167,8 +165,7 @@ def main(
     exclude_markdown_external_links: Annotated[
         bool,
         typer.Option(
-            "--exclude-markdown-external-links/"
-            "--include-markdown-external-links",
+            "--exclude-markdown-external-links/" "--include-markdown-external-links",
             help="Exclude external links from the final markdown output.",
         ),
     ] = True,
@@ -188,14 +185,10 @@ def main(
     # If the user didn't provide the option, use the default list.
     # If they provided the option but no values, it will be an empty list.
     final_include_patterns = (
-        include_patterns
-        if include_patterns is not None
-        else DEFAULT_INCLUDE_PATTERNS
+        include_patterns if include_patterns is not None else DEFAULT_INCLUDE_PATTERNS
     )
     final_exclude_patterns = (
-        exclude_patterns
-        if exclude_patterns is not None
-        else DEFAULT_EXCLUDE_PATTERNS
+        exclude_patterns if exclude_patterns is not None else DEFAULT_EXCLUDE_PATTERNS
     )
     final_content_types = (
         content_types if content_types is not None else DEFAULT_CONTENT_TYPES
@@ -206,9 +199,7 @@ def main(
     if output_file is None:
         # User did not specify --output, generate filename from URL
         storage_dir = Path("storage")
-        storage_dir.mkdir(
-            parents=True, exist_ok=True
-        )  # Ensure storage dir exists
+        storage_dir.mkdir(parents=True, exist_ok=True)  # Ensure storage dir exists
 
         try:
             parsed_url = urlparse(url)
@@ -221,14 +212,13 @@ def main(
             )  # Replace invalid chars
             # Remove trailing dots or underscores
             sanitized_domain = sanitized_domain.strip("._")
-            if not sanitized_domain:  # Handle cases where sanitization results in empty string # noqa: E501
+            # Handle cases where sanitization results in empty string
+            if not sanitized_domain:
                 sanitized_domain = "default_crawl_output"
 
             output_filename = f"{sanitized_domain}.md"
             output_file = storage_dir / output_filename
-            print(
-                f"No output file specified. Using generated path: {output_file}"  # noqa: E501
-            )
+            print("No output file specified. Using generated path:\n" f"{output_file}")
         except Exception as e:
             err_console.print(
                 f"[bold red]Error generating output filename from URL '{url}':"
@@ -240,9 +230,7 @@ def main(
     # --- Configure Filters ---
     filters = []
     if final_exclude_patterns:
-        filters.append(
-            URLPatternFilter(patterns=final_exclude_patterns, reverse=True)
-        )
+        filters.append(URLPatternFilter(patterns=final_exclude_patterns, reverse=True))
     if final_include_patterns:
         filters.append(URLPatternFilter(patterns=final_include_patterns))
     if final_content_types:
@@ -251,17 +239,14 @@ def main(
     filter_chain = FilterChain(filters)
 
     # --- Configure Scorer ---
-    scorer = KeywordRelevanceScorer(
-        keywords=final_keywords,
-        weight=keyword_weight
-    )
+    scorer = KeywordRelevanceScorer(keywords=final_keywords, weight=keyword_weight)
 
     # --- Configure Crawling Strategy ---
     strategy = BestFirstCrawlingStrategy(
         max_depth=max_depth,
         include_external=include_external,
         filter_chain=filter_chain,
-        url_scorer=scorer
+        url_scorer=scorer,
     )
 
     # --- Configure Markdown Generator ---
@@ -291,7 +276,8 @@ def main(
     # Pass the selected markdown strategy here
     merged_run_config = CrawlerRunConfig(
         deep_crawl_strategy=strategy,
-        markdown_generator=markdown_strategy,  # Correct argument name is markdown_generator # noqa: E501
+        # Correct argument name is markdown_generator
+        markdown_generator=markdown_strategy,
         verbose=verbose,
         stream=stream,
         # cache_mode=cache_mode, # Set below
@@ -304,16 +290,15 @@ def main(
     try:
         # Find the matching enum member case-insensitively
         parsed_cache_mode = next(
-            mode
-            for mode in CacheMode
-            if mode.name.lower() == cache_mode_str.lower()
+            mode for mode in CacheMode if mode.name.lower() == cache_mode_str.lower()
         )
         merged_run_config.cache_mode = parsed_cache_mode
     except StopIteration:
+        valid_modes = [e.name for e in CacheMode]
         err_console.print(
             f"[bold red]Invalid cache mode:[/bold red] '{cache_mode_str}'. "
-            f"Valid choices (case-insensitive): {[e.name for e in CacheMode]}"
-        )  # noqa: E501
+            f"Valid choices (case-insensitive): {valid_modes}"
+        )
         raise typer.Exit(code=1)
 
     # --- Run the Crawl ---
@@ -325,7 +310,7 @@ def main(
                 output_file=output_file,
                 output_title=output_title,
                 browser_config=browser_config,
-                run_config=merged_run_config,  # Pass the config with the selected strategy # noqa: E501
+                run_config=merged_run_config,
                 verbose=verbose,
             )
         )
@@ -334,9 +319,7 @@ def main(
         pass
     except Exception as e:
         # Catch other potential errors during setup or run_crawl call
-        err_console.print(
-            f"[bold red]An unexpected error occurred:[/bold red] {e}"
-        )
+        err_console.print(f"[bold red]An unexpected error occurred:[/bold red] {e}")
         raise typer.Exit(code=1)
 
 
