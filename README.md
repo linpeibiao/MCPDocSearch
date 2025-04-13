@@ -35,18 +35,18 @@ This project uses [`uv`](https://github.com/astral-sh/uv) for dependency managem
 1. **Install `uv`**: Follow the instructions on the [uv website](https://github.com/astral-sh/uv).
 2. **Clone the repository:**
 
-    ```bash
-    git clone <repository-url>
-    cd MCPDocSearch
-    ```
+   ```bash
+   git clone https://github.com/alizdavoodi/MCPDocSearch.git
+   cd MCPDocSearch
+   ```
 
 3. **Install dependencies:**
 
-    ```bash
-    uv sync
-    ```
+   ```bash
+   uv sync
+   ```
 
-    This command creates a virtual environment (usually `.venv`) and installs all dependencies listed in `pyproject.toml`.
+   This command creates a virtual environment (usually `.venv`) and installs all dependencies listed in `pyproject.toml`.
 
 ## Usage
 
@@ -88,16 +88,16 @@ Key options include:
 Sometimes, you might want to crawl only a specific subsection of a documentation site. This often requires some trial and error with `--include-pattern` and `--max-depth`.
 
 - **`--include-pattern`**: Restricts the crawler to only follow links whose URLs match the given pattern(s). Use wildcards (`*`) for flexibility.
-- **`--max-depth`**: Controls how many "clicks" away from the starting URL the crawler will go. A depth of 1 means it only crawls pages directly linked from the start URL. A depth of 2 means it crawls those pages *and* pages linked from them (if they also match include patterns), and so on.
+- **`--max-depth`**: Controls how many "clicks" away from the starting URL the crawler will go. A depth of 1 means it only crawls pages directly linked from the start URL. A depth of 2 means it crawls those pages _and_ pages linked from them (if they also match include patterns), and so on.
 
 **Example: Crawling only the Pulsar Admin API section**
 
 Suppose you want only the content under `https://pulsar.apache.org/docs/4.0.x/admin-api-*`.
 
-1.  **Start URL:** You could start at the overview page: `https://pulsar.apache.org/docs/4.0.x/admin-api-overview/`.
-2.  **Include Pattern:** You only want links containing `admin-api`: `--include-pattern "*admin-api*"`.
-3.  **Max Depth:** You need to figure out how many levels deep the admin API links go from the starting page. Start with `2` and increase if needed.
-4.  **Verbose Mode:** Use `-v` to see which URLs are being visited or skipped, which helps debug the patterns and depth.
+1. **Start URL:** You could start at the overview page: `https://pulsar.apache.org/docs/4.0.x/admin-api-overview/`.
+2. **Include Pattern:** You only want links containing `admin-api`: `--include-pattern "*admin-api*"`.
+3. **Max Depth:** You need to figure out how many levels deep the admin API links go from the starting page. Start with `2` and increase if needed.
+4. **Verbose Mode:** Use `-v` to see which URLs are being visited or skipped, which helps debug the patterns and depth.
 
 ```bash
 uv run python crawl.py https://pulsar.apache.org/docs/4.0.x/admin-api-overview/ -v --include-pattern "*admin-api*" --max-depth 2
@@ -166,15 +166,15 @@ Key libraries used:
 
 The project follows this basic flow:
 
-1.  **`crawler_cli`**: You run this tool, providing a starting URL and options.
-2.  **Crawling (`crawl4ai`)**: The tool uses `crawl4ai` to fetch web pages, following links based on configured rules (depth, patterns).
-3.  **Cleaning (`crawler_cli/markdown.py`)**: Optionally, HTML content is cleaned (removing navigation, links) using BeautifulSoup.
-4.  **Markdown Generation (`crawl4ai`)**: Cleaned HTML is converted to Markdown.
-5.  **Storage (`./storage/`)**: The generated Markdown content is saved to a file in the `./storage/` directory.
-6.  **`mcp_server` Startup**: When the MCP server starts (usually via Cursor's config), it runs `mcp_server/data_loader.py`.
-7.  **Loading & Caching**: The data loader checks for a cache file (`.pkl`). If valid, it loads chunks and embeddings from the cache. Otherwise, it reads `.md` files from `./storage/`.
-8.  **Chunking & Embedding**: Markdown files are parsed into chunks based on headings. Embeddings are generated for each chunk using `sentence-transformers` and stored in memory (and saved to cache).
-9.  **MCP Tools (`mcp_server/mcp_tools.py`)**: The server exposes tools (`list_documents`, `search_documentation`, etc.) via `fastmcp`.
+1. **`crawler_cli`**: You run this tool, providing a starting URL and options.
+2. **Crawling (`crawl4ai`)**: The tool uses `crawl4ai` to fetch web pages, following links based on configured rules (depth, patterns).
+3. **Cleaning (`crawler_cli/markdown.py`)**: Optionally, HTML content is cleaned (removing navigation, links) using BeautifulSoup.
+4. **Markdown Generation (`crawl4ai`)**: Cleaned HTML is converted to Markdown.
+5. **Storage (`./storage/`)**: The generated Markdown content is saved to a file in the `./storage/` directory.
+6. **`mcp_server` Startup**: When the MCP server starts (usually via Cursor's config), it runs `mcp_server/data_loader.py`.
+7. **Loading & Caching**: The data loader checks for a cache file (`.pkl`). If valid, it loads chunks and embeddings from the cache. Otherwise, it reads `.md` files from `./storage/`.
+8. **Chunking & Embedding**: Markdown files are parsed into chunks based on headings. Embeddings are generated for each chunk using `sentence-transformers` and stored in memory (and saved to cache).
+9. **MCP Tools (`mcp_server/mcp_tools.py`)**: The server exposes tools (`list_documents`, `search_documentation`, etc.) via `fastmcp`.
 10. **Querying (Cursor)**: An MCP client like Cursor can call these tools. `search_documentation` uses the pre-computed embeddings to find relevant chunks based on semantic similarity to the query.
 
 ## License
@@ -185,7 +185,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Contributions are welcome! Please feel free to open an issue or submit a pull request.
 
-*(Consider adding more detailed contribution guidelines in a separate CONTRIBUTING.md file, covering code style, testing requirements, and the pull request process.)*
+_(Consider adding more detailed contribution guidelines in a separate CONTRIBUTING.md file, covering code style, testing requirements, and the pull request process.)_
 
 ## Security Notes
 
