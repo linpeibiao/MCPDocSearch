@@ -118,7 +118,7 @@ python -m mcp_server.main
 
 However, it needs to be run from the project's root directory (`MCPDocSearch`) so that Python can find the `mcp_server` module.
 
-### 3. Configuring Cursor
+### 3. Configuring Cursor/Claude for Desktop
 
 To use this server with Cursor, create a `.cursor/mcp.json` file in the root of this project (`MCPDocSearch/.cursor/mcp.json`) with the following content:
 
@@ -151,6 +151,8 @@ To use this server with Cursor, create a `.cursor/mcp.json` file in the root of 
   - `"run", "python", "-m", "mcp_server.main"`: The command `uv` will execute within the correct directory and virtual environment.
 
 After saving this file and restarting Cursor, the "doc-query-server" should become available in Cursor's MCP settings and usable by the Agent (e.g., `@doc-query-server search documentation for "how to install"`).
+
+For Claude for Desktop, you can use this [official documentation](https://modelcontextprotocol.io/quickstart/server#mac-os-linux) to set up the MCP server
 
 ## Dependencies
 
