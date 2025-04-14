@@ -13,15 +13,24 @@ else:
     device = "cpu"
 
 # --- Embedding Model ---
-# Load the model once when the app starts. Choose a model suitable for your needs.
+# Load the model once when the app starts.
+# Choose a model suitable for your needs.
 # 'all-MiniLM-L6-v2' is a good starting point: fast and decent quality.
-# Other options: 'multi-qa-mpnet-base-dot-v1' (good for QA), 'all-mpnet-base-v2' (higher quality, slower)
+# Other options: 'multi-qa-mpnet-base-dot-v1' (good for QA),
+# 'all-mpnet-base-v2' (higher quality, slower)
 # Use try-except to handle potential model loading issues gracefully
 try:
     # Switch to a model trained for QA/Retrieval tasks
     model_name = "multi-qa-mpnet-base-dot-v1"
     # Pass the determined device to the model
     embedding_model = SentenceTransformer(model_name, device=device)
+    # Log the device being used
+    import sys
+
+    print(
+        f"Embedding model '{model_name}' loaded on device: {device}",
+        file=sys.stderr,
+    )
 except Exception as e:
     # Log errors to stderr instead of stdout if needed for debugging
     import sys

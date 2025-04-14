@@ -12,7 +12,7 @@ from mcp_server.config import STORAGE_DIR, CACHE_FILE_PATH
 from mcp_server.app import embedding_model
 
 # Simple regex to find markdown headings (##, ###, etc.)
-HEADING_RE = re.compile(r"^(#{2,6})\s+(.*)")
+HEADING_RE = re.compile(r"^(#{2,4})\s+(.*)")
 # Simple regex to find Source: URL lines
 SOURCE_RE = re.compile(r"Source:\s*(https?://\S+)")
 
@@ -115,7 +115,7 @@ def load_and_chunk_documents():
                 current_file_metadata[file_path.name] = mtime
             except OSError as e:
                 print(
-                    f"Warning: Could not get metadata for {file_path.name}:" f" {e}",
+                    f"Warning: Could not get metadata for {file_path.name}: {e}",
                     file=sys.stderr,
                 )
                 # Decide how to handle - skip file? invalidate cache?
@@ -208,8 +208,13 @@ def load_and_chunk_documents():
             try:
                 # Encode all texts at once for efficiency
                 # Set show_progress_bar=True for CLI progress feedback
+                print(
+                    f"Generating embeddings for {len(texts_to_embed)} chunks...",
+                    file=sys.stderr,
+                )
                 embeddings = embedding_model.encode(
-                    texts_to_embed, show_progress_bar=False
+                    texts_to_embed,
+                    show_progress_bar=True,  # Enable progress bar
                 )
                 # Add embeddings back to the chunk dictionaries
                 for i, chunk in enumerate(loaded_chunks):
