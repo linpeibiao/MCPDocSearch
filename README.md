@@ -122,7 +122,17 @@ python -m mcp_server.main
 
 However, it needs to be run from the project's root directory (`MCPDocSearch`) so that Python can find the `mcp_server` module.
 
-### 3. Configuring Cursor
+## ⚠️ Caution: Embedding Time
+
+The MCP server generates embeddings locally the first time it runs or whenever the source Markdown files in `./storage/` change. This process involves loading a machine learning model and processing all the text chunks.
+
+- **Time Varies:** The time required for embedding generation can vary significantly based on:
+  - **Hardware:** Systems with a compatible GPU (CUDA or Apple Silicon/MPS) will be much faster than CPU-only systems.
+  - **Data Size:** The total number of Markdown files and their content length directly impacts processing time.
+- **Be Patient:** For large documentation sets or on slower hardware, the initial startup (or startup after changes) might take several minutes. Subsequent startups using the cache will be much faster. ⏳
+
+
+### 3. Configuring Cursor/Claude for Desktop
 
 To use this server with Cursor, create a `.cursor/mcp.json` file in the root of this project (`MCPDocSearch/.cursor/mcp.json`) with the following content:
 
@@ -156,14 +166,8 @@ To use this server with Cursor, create a `.cursor/mcp.json` file in the root of 
 
 After saving this file and restarting Cursor, the "doc-query-server" should become available in Cursor's MCP settings and usable by the Agent (e.g., `@doc-query-server search documentation for "how to install"`).
 
-## ⚠️ Caution: Embedding Time
+For Claude for Desktop, you can use this [official documentation](https://modelcontextprotocol.io/quickstart/server#mac-os-linux) to set up the MCP server
 
-The MCP server generates embeddings locally the first time it runs or whenever the source Markdown files in `./storage/` change. This process involves loading a machine learning model and processing all the text chunks.
-
-- **Time Varies:** The time required for embedding generation can vary significantly based on:
-  - **Hardware:** Systems with a compatible GPU (CUDA or Apple Silicon/MPS) will be much faster than CPU-only systems.
-  - **Data Size:** The total number of Markdown files and their content length directly impacts processing time.
-- **Be Patient:** For large documentation sets or on slower hardware, the initial startup (or startup after changes) might take several minutes. Subsequent startups using the cache will be much faster. ⏳
 
 ## Dependencies
 
