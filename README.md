@@ -85,6 +85,10 @@ Key options include:
 - `--keyword`/`-k`: Keywords for relevance scoring during crawl.
 - `--remove-links`/`--keep-links`: Control HTML cleaning.
 - `--cache-mode`: Control `crawl4ai` caching (`DEFAULT`, `BYPASS`, `FORCE_REFRESH`).
+- `--wait-for`: Wait for a specific time (seconds) or CSS selector before capturing content (e.g., `5` or `'css:.content'`). Useful for pages with delayed loading.
+- `--js-code`: Execute custom JavaScript on the page before capturing content.
+- `--page-load-timeout`: Set the maximum time (seconds) to wait for a page to load.
+- `--wait-for-js-render`/`--no-wait-for-js-render`: Enable a specific script to better handle JavaScript-heavy Single Page Applications (SPAs) by scrolling and clicking potential "load more" buttons. Automatically sets a default wait time if `--wait-for` is not specified.
 
 #### Refining Crawls with Patterns and Depth
 
@@ -117,6 +121,16 @@ python -m mcp_server.main
 ```
 
 However, it needs to be run from the project's root directory (`MCPDocSearch`) so that Python can find the `mcp_server` module.
+
+## ⚠️ Caution: Embedding Time
+
+The MCP server generates embeddings locally the first time it runs or whenever the source Markdown files in `./storage/` change. This process involves loading a machine learning model and processing all the text chunks.
+
+- **Time Varies:** The time required for embedding generation can vary significantly based on:
+  - **Hardware:** Systems with a compatible GPU (CUDA or Apple Silicon/MPS) will be much faster than CPU-only systems.
+  - **Data Size:** The total number of Markdown files and their content length directly impacts processing time.
+- **Be Patient:** For large documentation sets or on slower hardware, the initial startup (or startup after changes) might take several minutes. Subsequent startups using the cache will be much faster. ⏳
+
 
 ### 3. Configuring Cursor/Claude for Desktop
 
@@ -153,6 +167,7 @@ To use this server with Cursor, create a `.cursor/mcp.json` file in the root of 
 After saving this file and restarting Cursor, the "doc-query-server" should become available in Cursor's MCP settings and usable by the Agent (e.g., `@doc-query-server search documentation for "how to install"`).
 
 For Claude for Desktop, you can use this [official documentation](https://modelcontextprotocol.io/quickstart/server#mac-os-linux) to set up the MCP server
+
 
 ## Dependencies
 
