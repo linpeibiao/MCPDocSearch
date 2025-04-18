@@ -11,6 +11,8 @@ DEFAULT_INCLUDE_PATTERNS = [
     "*getting started*",
     "*installation*",
     "*setup*",
+    "*manual*",
+    "*faq*",
 ]
 DEFAULT_EXCLUDE_PATTERNS = ["*#*"]
 DEFAULT_CONTENT_TYPES = ["text/html"]
@@ -26,6 +28,8 @@ DEFAULT_KEYWORDS = [
     "getting started",
     "installation",
     "setup",
+    "manual",
+    "faq",
 ]
 DEFAULT_KEYWORD_WEIGHT = 0.7
 DEFAULT_OUTPUT_TITLE = "# Crawled Documentation"
