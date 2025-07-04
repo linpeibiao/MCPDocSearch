@@ -1,7 +1,10 @@
 FROM python:3.10
 
 # Install uv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+RUN pip install uv
+
+# Install uvicorn
+RUN pip install uvicorn
 
 # Set the working directory
 WORKDIR /app
@@ -9,7 +12,7 @@ WORKDIR /app
 # Copy the repository content
 COPY . /app
 
-# Install dependencies
+# Install dependencies using uv
 RUN uv sync
 
 # Command to run the MCP server
